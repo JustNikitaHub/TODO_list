@@ -1,0 +1,14 @@
+D:\Projects\TODO_list\bin\Debug\net9.0-windows\TODO_list.exe
+D:\Projects\TODO_list\bin\Debug\net9.0-windows\TODO_list.deps.json
+D:\Projects\TODO_list\bin\Debug\net9.0-windows\TODO_list.runtimeconfig.json
+D:\Projects\TODO_list\bin\Debug\net9.0-windows\TODO_list.dll
+D:\Projects\TODO_list\bin\Debug\net9.0-windows\TODO_list.pdb
+D:\Projects\TODO_list\obj\Debug\net9.0-windows\TODO_list.GeneratedMSBuildEditorConfig.editorconfig
+D:\Projects\TODO_list\obj\Debug\net9.0-windows\TODO_list.AssemblyInfoInputs.cache
+D:\Projects\TODO_list\obj\Debug\net9.0-windows\TODO_list.AssemblyInfo.cs
+D:\Projects\TODO_list\obj\Debug\net9.0-windows\TODO_list.csproj.CoreCompileInputs.cache
+D:\Projects\TODO_list\obj\Debug\net9.0-windows\TODO_list.dll
+D:\Projects\TODO_list\obj\Debug\net9.0-windows\refint\TODO_list.dll
+D:\Projects\TODO_list\obj\Debug\net9.0-windows\TODO_list.pdb
+D:\Projects\TODO_list\obj\Debug\net9.0-windows\TODO_list.genruntimeconfig.cache
+D:\Projects\TODO_list\obj\Debug\net9.0-windows\ref\TODO_list.dll
