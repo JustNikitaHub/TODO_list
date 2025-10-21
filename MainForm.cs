@@ -1,12 +1,12 @@
-using System.Text.Unicode;
-using System.Text.Encodings.Web;
-using System.Text.Json;
 using Microsoft.VisualBasic;
 using System.Reflection;
+using Models;
+using Services;
 
 namespace TODO_list;
 
-public partial class Form1 : Form
+
+public partial class MainForm : Form
 {
     //-----------КОМПОНЕНТЫ
     private Button btnNewTask;
@@ -17,12 +17,16 @@ public partial class Form1 : Form
     private ListBox lstTasks;
     private TextBox txtDecriptionTask;
     private CheckBox cbxIsDone;
+    private TableLayoutPanel tlpRadioButtons;
+    private RadioButton rbnPriorityLow;
+    private RadioButton rbnPriorityMedium;
+    private RadioButton rbnPriorityHigh;
     private Label lblName;
     private Label lblDescr;
-    //-------------
+    //-------------Пользовательский классы
     private TaskManager taskManager;
     private JsonTaskSaver saver;
-    public Form1()
+    public MainForm()
     {
         InitializeComponent();
         Size = new Size(800, 600);
@@ -35,6 +39,9 @@ public partial class Form1 : Form
         btnLoadJSON.Click += btnLoadJSON_Click;
         lstTasks.SelectedIndexChanged += lstTasks_SelectedIndexChanged;
         cbxIsDone.CheckedChanged += cbxIsDone_CheckedChanged;
+        rbnPriorityLow.CheckedChanged += rbnPriority0_CheckedChanged;
+        rbnPriorityMedium.CheckedChanged += rbnPriority1_CheckedChanged;
+        rbnPriorityHigh.CheckedChanged += rbnPriority2_CheckedChanged;
         lstTasks.Items.Clear();
         txtDecriptionTask.Text = "";
         saver = new();
@@ -50,7 +57,20 @@ public partial class Form1 : Form
         }
     }
 
+    private void rbnPriority2_CheckedChanged(object? sender, EventArgs e)
+    {
+        taskManager.FindTask(lstTasks.SelectedIndex).ChangePriority((Priority)2);
+    }
 
+    private void rbnPriority1_CheckedChanged(object? sender, EventArgs e)
+    {
+        taskManager.FindTask(lstTasks.SelectedIndex).ChangePriority((Priority)1);
+    }
+
+    private void rbnPriority0_CheckedChanged(object? sender, EventArgs e)
+    {
+        taskManager.FindTask(lstTasks.SelectedIndex).ChangePriority(0);
+    }
 
     public void InitializeMyControls()
     {
@@ -122,7 +142,35 @@ public partial class Form1 : Form
             Location = new Point(txtDecriptionTask.Location.X, txtDecriptionTask.Location.Y + txtDecriptionTask.Height),
             Enabled = false
         };
-        //НЕ ЗАБЫТЬ ДОБАВИТЬ
+        tlpRadioButtons = new()
+        {
+            Location = new Point(cbxIsDone.Location.X, cbxIsDone.Location.Y + cbxIsDone.Height),
+            ColumnCount = 1,
+            RowCount = 3,
+            Enabled = false
+        };
+        rbnPriorityLow = new()
+        {
+            AutoSize = true,
+            Text = "Низкий приоритет",
+            Checked = true
+        };
+        rbnPriorityMedium = new()
+        {
+            AutoSize = true,
+            Text = "Средний приоритет",
+            Checked = false
+        };
+        rbnPriorityHigh = new()
+        {
+            AutoSize = true,
+            Text = "Высокий приоритет",
+            Checked = false
+        };
+        tlpRadioButtons.Controls.Add(rbnPriorityLow, 0, 0);
+        tlpRadioButtons.Controls.Add(rbnPriorityMedium, 0, 1);
+        tlpRadioButtons.Controls.Add(rbnPriorityHigh, 0, 2);
+        //НЕ ЗАБЫТЬ ДОБАВИТЬ, осел блять!
         Controls.AddRange(
             lstTasks,
             btnNewTask,
@@ -133,7 +181,8 @@ public partial class Form1 : Form
             txtDecriptionTask,
             lblName,
             lblDescr,
-            cbxIsDone
+            cbxIsDone,
+            tlpRadioButtons
             );
     }
     private void btnNewTask_Click(object sender, EventArgs e)
@@ -153,8 +202,8 @@ public partial class Form1 : Form
         int toDel = lstTasks.SelectedIndex;
         lstTasks.SelectedIndex = -1;
         txtDecriptionTask.Text = "";
-        Task old = taskManager.FindTask(toDel);
-        DateTime saveTime = old.creationTime;
+        Models.Task old = taskManager.FindTask(toDel);
+        DateTime saveTime = old.CreationTime;
         bool isDone = old.IsCompleted;
         string newName = Interaction.InputBox("Измените имя", "Редактирование", old.Name);
         string newDecsr = Interaction.InputBox("Измените описание", "Редактирование", old.Description);
@@ -170,7 +219,7 @@ public partial class Form1 : Form
         int toDel = lstTasks.SelectedIndex;
         lstTasks.SelectedIndex = -1;
         txtDecriptionTask.Text = "";
-        Task old = taskManager.FindTask(toDel);
+        Models.Task old = taskManager.FindTask(toDel);
         lstTasks.Items.Remove(old.Name);
         taskManager.RemoveTask(old);
     }
@@ -191,13 +240,22 @@ public partial class Form1 : Form
             btnEditTask.Enabled = false;
             btnDeleteTask.Enabled = false;
             cbxIsDone.Enabled = false;
+            tlpRadioButtons.Enabled = false;
             return;
         }
         btnEditTask.Enabled = true;
         btnDeleteTask.Enabled = true;
         cbxIsDone.Enabled = true;
+        tlpRadioButtons.Enabled = true;
         var task = taskManager.FindTask(lstTasks.SelectedIndex);
         cbxIsDone.CheckedChanged -= cbxIsDone_CheckedChanged;
+        rbnPriorityLow.CheckedChanged -= rbnPriority0_CheckedChanged;
+        rbnPriorityMedium.CheckedChanged -= rbnPriority1_CheckedChanged;
+        rbnPriorityHigh.CheckedChanged -= rbnPriority2_CheckedChanged;
+        (tlpRadioButtons.Controls[(int)task.Priority] as RadioButton).Checked = true;
+        rbnPriorityLow.CheckedChanged += rbnPriority0_CheckedChanged;
+        rbnPriorityMedium.CheckedChanged += rbnPriority1_CheckedChanged;
+        rbnPriorityHigh.CheckedChanged += rbnPriority2_CheckedChanged;
         cbxIsDone.Checked = task.IsCompleted;
         cbxIsDone.CheckedChanged += cbxIsDone_CheckedChanged;
         txtDecriptionTask.Text = task.Description;
@@ -207,134 +265,8 @@ public partial class Form1 : Form
         if (cbxIsDone.Checked) taskManager.FindTask(lstTasks.SelectedIndex).MarkCompleted();
         else taskManager.FindTask(lstTasks.SelectedIndex).MarkUncompleted();
     }
-    public class Task
-    {
-        public int ID { get; init; } = 0;
-        public string Name { get; init; } = "Пустая задача";
-        public string Description { get; init; } = "Задача не задана";
-        public bool IsCompleted { get; set; } = false;
-        public DateTime creationTime { get; init; } = DateTime.Now;
-        public Task(string name, string description, int id)
-        {
-            Name = name;
-            Description = description;
-            ID = id;
-            creationTime = DateTime.Now;
-        }
-        public Task(string name, string description, int id, DateTime date)
-        {
-            Name = name;
-            Description = description;
-            ID = id;
-            creationTime = date;
-        }
-        public Task() { }
-        public void MarkCompleted()
-        {
-            IsCompleted = true;
-        }
-        public bool IsTaskCompleted()
-        {
-            return IsCompleted;
-        }
 
-        public void MarkUncompleted()
-        {
-            IsCompleted = false;
-        }
-    }
 
-    public class TaskManager
-    {
-        private List<Task> tasks = new();
-        private int nextID = 0;
-        public int CountTasks => tasks.Count;
-        public string FileName = "TaskStorage";
-        private void PushID()
-        {
-            if (nextID == tasks[tasks.Count - 1].ID) nextID++;
-        }
-        private void FreeID()
-        {
-            nextID--;
-        }
-        public Task FindTask(string name)
-        {
-            foreach (Task task in tasks)
-            {
-                if (task.Name == name) return task;
-            }
-            return null;
-        }
-        public int FindTask(Task task)
-        {
-            return tasks.FindIndex(t => t.Equals(task));
-        }
-        public Task FindTask(int index)
-        {
-            return tasks[index];
-        }
-        public void AddTask(Task task) => tasks.Add(task);
-        public void CreateTask(string name, string description)
-        {
-            Task toAdd = new(name, description, nextID);
-            AddTask(toAdd);
-            PushID();
-        }
-        public void CreateTask(string name, string description, DateTime date, bool isDone=false)
-        {
-            Task toAdd = new(name, description, nextID, date);
-            if (isDone) toAdd.MarkCompleted();
-            AddTask(toAdd);
-            PushID();
-        }
-        public void RemoveTask(Task task)
-        {
-            tasks.Remove(task);
-            FreeID();
-        }
-        public void Clear()
-        {
-            tasks.Clear();
-            nextID = 0;
-        }
-        public List<Task> GetCopy()
-        {
-            return tasks;
-        }
-        public TaskManager(string name)
-        {
-            FileName = name;
-        }
-        public TaskManager() { }
-    }
-    public class JsonTaskSaver
-    {
-        public void Save(TaskManager path)
-        {
-            if (path == null) { MessageBox.Show("Данных для записи нет!", "Ошибка записи", MessageBoxButtons.OK, MessageBoxIcon.Error); return; }
-            if (path.CountTasks == 0) { MessageBox.Show("Данных для записи нет!", "Ошибка записи", MessageBoxButtons.OK, MessageBoxIcon.Error); return; }
-            var settings = new JsonSerializerOptions()
-            {
-                WriteIndented = true,
-                Encoder = JavaScriptEncoder.Create(UnicodeRanges.BasicLatin, UnicodeRanges.Cyrillic),
-            };
-            using (var stream = new FileStream(path.FileName, FileMode.Create))
-            {
-                JsonSerializer.Serialize(stream, path.GetCopy(), settings);
-            }
-        }
-        public void Load(TaskManager path)
-        {
-            using (var stream = new FileStream(path.FileName, FileMode.Open))
-            {
-                List<Task> tasks = new();
-                tasks = JsonSerializer.Deserialize<List<Task>>(stream);
-                path.Clear();
-                foreach (var task in tasks) path.AddTask(task);
-                MessageBox.Show("Успешная загрузка!", "Загрузка задач", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
 
-        }
-    }
+
 }
